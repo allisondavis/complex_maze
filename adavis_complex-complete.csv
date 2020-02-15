@@ -1,0 +1,12 @@
+﻿NAME,SPP,T1.C,T1.I,T2.C,T2.I,T3.C,T3.I,T1-TIME,T2-TIME,T3-TIME,CONDITION
+Cypress,lat,13,8,11,5,NA,NA,607,411.3,NA,w/food
+Amara,lat,29,23,21,15,14,8,539.2,303.5,484.6,w/food
+Piper,lat,10,4,11,5,14,8,941.9,396.5,448.6,w/food
+Sadie,lat,22,16,9,3,20,14,889,279.4,328.6,w/food
+Tory,form,NA,NA,22,18,15,9,NA,469.9,338.2,w/food
+Aria,form,32,26,8,2,13,7,1041.9,217.1,452.1,w/food
+Sofia,form,11,5,NA,NA,20,14,261.6,NA,609.4,w/food
+Amy,form,15,9,8,2,20,14,826.4,245.6,462,w/food
+Meagan,form,16,9,12,6,15,9,200.5,375.8,559.8,w/food
+Olivia,form,NA,NA,11,5,12,6,NA,239.6,463.9,w/food
+Luna,form,26,20,10,4,12,6,652.3,228,312.9,w/food
