@@ -9,3 +9,133 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## Data collection
+
+```{r}
+library(curl)
+
+raw <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/adavis_complex-complete.csv")
+
+raw <- read.csv(raw, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+
+head(raw)
+
+```
+
+
+## Analyses
+
+#### <font color="deepskyblue"> First look</font>
+
+I will first look at the data via boxplots for each trial vs species, as well as bar charts per species
+
+```{r}
+library(ggplot2)
+
+ggplot(raw, aes(x=SPP, y=T1.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 1\n") + geom_jitter(shape=16, position=position_jitter(0.2)) + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+
+ggplot(raw, aes(x=SPP, y=T2.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 2\n") + geom_jitter(shape=16, position=position_jitter(0.2)) + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+
+ggplot(raw, aes(x=SPP, y=T3.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 3\n") + geom_jitter(shape=16, position=position_jitter(0.2)) + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+
+#come back and get bar chart/boxplot/scatterplot to compare three trials within each spp
+
+lat <- raw[raw$SPP == "lat",]
+form <- raw[raw$SPP == "form",]
+
+trial.er.lat <- lat[c(4,6,8)]
+trial.tm.lat <- lat[9:11]
+
+trial.er.form <- form[c(4,6,8)]
+trial.tm.form <- form[c(9:11)]
+
+par(mfrow=c(2,2))
+boxplot(trial.er.lat, main="Errors for sailfin")
+boxplot(trial.er.form, main="Errors for amazon")
+boxplot(trial.tm.lat, main="Duration for sailfin")
+boxplot(trial.tm.form, main ="Duration for amazon")
+
+
+```
+
+
+#### <font color = "deepskyblue"> Simple stats</font>
+
+* using t-test to detect differences in means between species in same trial, and between trials in same species
+
+```{r}
+#testing differences between species w/in same trial
+t.test(lat$T1.I, form$T1.I, alternative = "two.sided")
+
+t.test(lat$T2.I, form$T2.I, alternative = "two.sided")
+
+t.test(lat$T3.I, form$T3.I, alternative = "two.sided")
+
+#testing differences between trials w/in same species
+t.test(lat$T1.I, lat$T2.I, alternative = "two.sided")
+
+t.test(lat$T1.I, lat$T3.I, alternative = "two.sided")
+
+t.test(lat$T2.I, lat$T3.I, alternative = "two.sided")
+
+
+t.test(form$T1.I, form$T2.I, alternative = "two.sided")
+
+t.test(form$T1.I, form$T3.I, alternative = "two.sided")
+
+t.test(form$T2.I, form$T3.I, alternative = "two.sided")
+
+```
+
+<font color = "deeporchid4"> No significant differences found.</font>
+
+* using F-test to detect different variations in differnt species in same trial, and different trials in same species
+
+```{r}
+
+
+#testing variances between species w/in same trial
+var.test(lat$T1.I, form$T1.I, alternative = "two.sided")
+
+var.test(lat$T2.I, form$T2.I, alternative = "two.sided")
+
+var.test(lat$T3.I, form$T3.I, alternative = "two.sided")
+
+#testing variances between trials w/in same species
+var.test(lat$T1.I, lat$T2.I, alternative = "two.sided")
+
+var.test(lat$T1.I, lat$T3.I, alternative = "two.sided")
+
+var.test(lat$T2.I, lat$T3.I, alternative = "two.sided")
+
+
+var.test(form$T1.I, form$T2.I, alternative = "two.sided")
+
+var.test(form$T1.I, form$T3.I, alternative = "two.sided")
+
+var.test(form$T2.I, form$T3.I, alternative = "two.sided")
+
+
+```
+
+
+<font color="deeporchid4"> Only significant difference is between trials 1 and 3 in amazons.</font>
+
+#### Complex stats
+
+Here I will use a generalized linear mixed-effects model to assess differences in the number of errors made across trials between the species.
+  * species as fixed effect, individual ID as random effect, and trial number as covariate
+  
+```{r}
+library(lme4)
+
+
+
+```
+  
+  
+  
+  
+  
+  
+  
