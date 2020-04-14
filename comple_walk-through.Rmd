@@ -43,7 +43,34 @@ head(form)
 
 (If you want to play around with font color, use the code: `<font color = "name"> your text</font>`. Google for font color names)
 
-We first want to visualize our data, see in general how things compare between species so we can better interpret our statistical results. A good way to do this is using boxplots. While it is possible to do boxplots from base functions, we can specify more using ggplot. You will need to install and upload the "ggplot2" package for this.
+We first want to visualize our data, to see in general how things compare within and between species so we can better interpret our statistical results. A good way to do this is using boxplots. We can start with the base plot functions, specifically 'boxplot()'. 
+
+  * separate out the columns containing the incorrect choices for each trial and duration; this can be done separately for each species and separately for error and time. 
+  * use 'boxplot()' to graph errors across three trials for each species; repeat for time
+    - can use 'par()' to display them next to each other
+
+*I'm sure there is a better way to do this, or a way to do this via ggplot, but I can't seem to figure it out with the current data format.*
+
+
+```{r, results="hide", fig.show="hide", warning=FALSE}
+
+trial.er.lat <- lat[c(4,6,8)]
+trial.tm.lat <- lat[9:11]
+
+trial.er.form <- form[c(4,6,8)]
+trial.tm.form <- form[c(9:11)]
+
+par(mfrow=c(2,2))
+boxplot(trial.er.lat, main="Errors for sailfin")
+boxplot(trial.er.form, main="Errors for amazon")
+boxplot(trial.tm.lat, main="Duration for sailfin")
+boxplot(trial.tm.form, main ="Duration for amazon")
+
+```
+
+
+
+While it is possible to do boxplots from base functions, we can specify more using ggplot. You will need to install and upload the "ggplot2" package for this.
 
   * use 'library()' function to upload ggplot2.
   * use the following functions to build your plot:
@@ -64,29 +91,9 @@ ggplot(raw, aes(x=SPP, y=T1.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") 
 
 ggplot(raw, aes(x=SPP, y=T2.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 2\n") + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
 
-ggplot(raw, aes(x=SPP, y=T3.I, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Number of incorrect choices\n") + ggtitle("Trial 3\n") + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+ggplot(raw, aes(x=SPP, y=T1.I, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Number of incorrect choices\n") + ggtitle("Trial 3\n") + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
 
 ```
-
-
-
-#come back and get bar chart/boxplot/scatterplot to compare three trials within each spp
-
-lat <- raw[raw$SPP == "lat",]
-form <- raw[raw$SPP == "form",]
-
-trial.er.lat <- lat[c(4,6,8)]
-trial.tm.lat <- lat[9:11]
-
-trial.er.form <- form[c(4,6,8)]
-trial.tm.form <- form[c(9:11)]
-
-par(mfrow=c(2,2))
-boxplot(trial.er.lat, main="Errors for sailfin")
-boxplot(trial.er.form, main="Errors for amazon")
-boxplot(trial.tm.lat, main="Duration for sailfin")
-boxplot(trial.tm.form, main ="Duration for amazon")
-
 
 
 
