@@ -1,0 +1,168 @@
+---
+title: "Complex-walk through"
+author: "Allison Davis"
+date: "April 14, 2020"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data collection
+For data collection, you will need to install and upload the "curl" package. This package allows you to pull data from online sources and coerce them into the format of choice. 
+
+  * use 'library()' function to upload curl package.
+  * use 'curl()' function to pull excel data from your github.
+  * use 'read.csv()' function to coerce into csv format. **Your raw data uploaded to github must be in csv to begin with!**
+    - always use the 'head()' function to ensure that your dataframe looks correct!
+  * separate the raw data into two new dataframes for each species (using selection functions)
+  
+```{r, results="hide", warning=FALSE}
+library(curl)
+
+raw <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/adavis_complex-complete.csv")
+
+raw <- read.csv(raw, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+
+head(raw)
+
+lat <- raw[raw$SPP == "lat",]
+form <- raw[raw$SPP == "form",]
+head(lat)
+head(form)
+
+```
+
+
+## Analyses
+
+#### <font color="deepskyblue"> First look</font>
+
+(If you want to play around with font color, use the code: `<font color = "name"> your text</font>`. Google for font color names)
+
+We first want to visualize our data, see in general how things compare between species so we can better interpret our statistical results. A good way to do this is using boxplots. While it is possible to do boxplots from base functions, we can specify more using ggplot. You will need to install and upload the "ggplot2" package for this.
+
+  * use 'library()' function to upload ggplot2.
+  * use the following functions to build your plot:
+    - ggplot() : creates the base plot; tells ggplot what your basic x and y will be and from which dataframe. 
+    - geom_boxplot() : creates the boxplots themselves; uses the x and y specified in ggplot
+    - xlab()/ylab() : adds labels to your x and y axis
+    - ggtitle() : adds title to plot
+  * you can use 'geom_dotplot(binaxis = "y", stackdir = "center", method="histodot",binwidth = 1,  dotsize = 0.1, fill= "black")' to add points to the boxplots if you want to see where individuals lie (may need to play with dotsize).
+  * for aesthetics, you can play around with theme(), theme_classic(), scale_fill_manual; only important if you want to use these figures in a presentation/paper.
+
+*code provided is example of combinations, not all of them.*
+
+```{r, results="hide", warning=FALSE, fig.show="hide"}
+library(ggplot2)
+
+ggplot(raw, aes(x=SPP, y=T1.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 1\n") 
+
+
+ggplot(raw, aes(x=SPP, y=T2.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 2\n") + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+
+ggplot(raw, aes(x=SPP, y=T3.I, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Number of incorrect choices\n") + ggtitle("Trial 3\n") + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
+
+```
+
+
+
+#come back and get bar chart/boxplot/scatterplot to compare three trials within each spp
+
+lat <- raw[raw$SPP == "lat",]
+form <- raw[raw$SPP == "form",]
+
+trial.er.lat <- lat[c(4,6,8)]
+trial.tm.lat <- lat[9:11]
+
+trial.er.form <- form[c(4,6,8)]
+trial.tm.form <- form[c(9:11)]
+
+par(mfrow=c(2,2))
+boxplot(trial.er.lat, main="Errors for sailfin")
+boxplot(trial.er.form, main="Errors for amazon")
+boxplot(trial.tm.lat, main="Duration for sailfin")
+boxplot(trial.tm.form, main ="Duration for amazon")
+
+
+
+
+#### <font color = "deepskyblue"> Simple stats</font>
+
+First, let's look for average differences using the 't.test()' function. For the alternative specification, use "two.sided" as this will tell us if there are differences in any direction (we can figure out which direction later).
+
+  * perform t.tests comparing errors between species for the same trial
+  * perform t.tests comparing errors within species for different trials
+  * perform t.tests comparing time between species for the same trial
+  * perform t.tests comparing time within species for different trials
+  
+*code provided is example of combinations, not all of them.*
+
+```{r, results="hide", warning=FALSE}
+#testing differences between species w/in same trial
+t.test(lat$T1.I, form$T1.I, alternative = "two.sided")
+
+t.test(lat$T2.I, form$T2.I, alternative = "two.sided")
+
+t.test(lat$T3.I, form$T3.I, alternative = "two.sided")
+
+#testing differences between trials w/in same species
+t.test(lat$T1.I, lat$T2.I, alternative = "two.sided")
+
+t.test(lat$T1.I, lat$T3.I, alternative = "two.sided")
+
+t.test(lat$T2.I, lat$T3.I, alternative = "two.sided")
+
+```
+
+
+
+Now, let's look for differences in variation using the 'var.test()' function. For the alternative specification, use "two.sided" as this will tell us if there are differences in any direction (we can figure out which direction later).
+
+  * perform var.tests comparing errors between species for the same trial
+  * perform var.tests comparing errors within species for different trials
+  * perform var.tests comparing time between species for the same trial
+  * perform var.tests comparing time within species for different trials
+  
+*code provided is example of combinations, not all of them.*
+
+```{r, results="hide", warning=FALSE}
+#testing differences between species w/in same trial
+t.test(lat$T1.TIME, form$T1.TIME, alternative = "two.sided")
+
+t.test(lat$T2.TIME, form$T2.TIME, alternative = "two.sided")
+
+t.test(lat$T3.TIME, form$T3.TIME, alternative = "two.sided")
+
+#testing differences between trials w/in same species
+t.test(lat$T1.TIME, lat$T2.TIME, alternative = "two.sided")
+
+t.test(lat$T1.TIME, lat$T3.TIME, alternative = "two.sided")
+
+t.test(lat$T2.TIME, lat$T3.TIME, alternative = "two.sided")
+
+
+```
+
+
+#### <font color = "deepskyblue"> Complex stats</font>
+
+Here we will use a generalized linear mixed-effects model to assess differences in the number of errors made across trials between the species.
+  * species as fixed effect, individual ID as random effect, and trial number as covariate
+  
+```{r, results="hide", warning=FALSE}
+library(lme4)
+
+
+
+```
+  
+  
+  
+  
+  
+  
+  
