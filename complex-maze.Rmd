@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Data collection
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(curl)
 
 raw <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/adavis_complex-complete.csv")
@@ -29,7 +29,7 @@ head(raw)
 
 I will first look at the data via boxplots for each trial vs species, as well as bar charts per species
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(ggplot2)
 
 ggplot(raw, aes(x=SPP, y=T1.TIME, fill=SPP)) + geom_boxplot() + xlab("Species") + ylab("Time to completion (s)\n") + ggtitle("Trial 1\n") + geom_jitter(shape=16, position=position_jitter(0.2)) + theme_classic() + scale_fill_manual(values = c("#9C964A", "#FAD77B")) + theme(text = element_text(size = 16)) + theme(legend.position = "none")
@@ -181,14 +181,16 @@ var.test(form$T2.TIME, form$T3.TIME, alternative = "two.sided")
 <font color="deeporchid4"> Only significant difference is between trials 1 and 3 in amazons.</font>
 
 
-###  Complex stats
+###  Complex stats {.tabset .tabset-fade .tabset-pills}
+
+#### **First try** 
 
 Here I will use a generalized linear mixed-effects model to assess differences in the number of errors made across trials between the species.
   * species as fixed effect, individual ID as random effect, and trial number as covariate
 
 Had to rearrange the data, so that each trial for each individual was on a separate line. Will upload now.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(curl)
 
 Mraw <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/mixed.format_complex-raw.csv")
@@ -202,7 +204,7 @@ head(Mraw)
 Now let's check how the data are distributed. Normal distributions can use linear mixed models, whereas non-normal distributions can use generalized linear mixed models.
 
   
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(car)
 
 qqp(Mraw$INC, "norm")  #fits normal fine, so can used LMM
@@ -218,7 +220,7 @@ boxplot(data=Mraw, TIME ~ SPP * TRIAL, xlab= "Species.trial", ylab= "Time to com
   
 Now to the mixed models.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(lme4)
 library(lmerTest)
 library(car)
@@ -242,15 +244,122 @@ Anova(m2, type=3, test.statistic = "F")
 
 
 
+#### **Second try** 
+
+I changed the csv file to include subject number instead of name. Additionally, I will break the model down into 3 questions.
+
+```{r, warning=FALSE, message=FALSE}
+library(curl)
+
+raw2 <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/mixed.format_complex-raw2.csv")
+
+raw2 <- read.csv(raw2, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+
+raw2
+
+names(raw2)[1] <- "SUBJECT"   #easier to type without the X.U.FEFF in front!
+
+raw2
+
+```
+
+
+
+
+* **Model 1**: How does species affect errors/duration? Fixed effects: INC or TIME, SPP; Random effects: TRIAL, SUBJECT
+  
+```{r, warning=FALSE, message=FALSE}
+library(lme4)
+library(lmerTest)
+library(car)
+
+
+M1.e <- lmer(INC~SPP + (1|TRIAL)+(1|SUBJECT), data = raw2)
+summary(M1.e)
+Anova(M1.e, type = 3, test.statistic = "F")
+
+M1.t <- lmer(TIME~SPP + (1|TRIAL)+(1|SUBJECT), data = raw2)
+summary(M1.t)
+Anova(M1.t, type = 3, test.statistic = "F")
+
+```
+
+<font color= "deeporchid4"> ***RESULTS:***</font> Even with subject as numbers, still getting a "boundary singular fit" error, with no variance in subject. Maybe sample size is too small? Maybe it has some variance, but it's so small that R doesn't report it?
+
+Still get no significant result: there is no difference in errors or duration between species. In agreement with t-tests.
+
+
+
+  
+* **Model 2**: How does trial affect errors/duration? Aka was there any learning across trials? Fixed effects: INC or TIME, TRIAL; Random effects: SPP, SUBJECT
+  
+```{r, warning=FALSE, message=FALSE}
+M2.e <- lmer(INC~TRIAL + (1|SPP)+(1|SUBJECT), data = raw2)
+summary(M2.e)
+Anova(M2.e, type = 3, test.statistic = "F")
+
+M2.t <- lmer(TIME~TRIAL + (1|SPP)+(1|SUBJECT), data = raw2)
+summary(M2.t)
+Anova(M2.t, type = 3, test.statistic = "F")
+
+
+
+library(multcomp)
+library(lsmeans)
+
+#summary(glht(M2.t, lsm(pairwise~TRIAL)))
+
+```
+
+<font color= "deeporchid4"> ***RESULTS:***</font> still get the singular fit error, this time with no variance in subject OR species. Error model shows no significance, which is in agreement with t-tests. Duration shows significance, which agrees with t-tests, but the summary of the lmm shows a different p-value than the Anova with the F statistic (lmm: p=0.0427, Anova: p= 0.05501). Not sure what to make of the difference or which one I should use. Additionally, it doesn't seem like this test will show me which trials are differing. Possibly another function will extract that (tried using multcomp and lsmeans packages, but still not sure how to make it work, keep getting errors).
+
+
+
+  
+* **Model 3**: How does trial and species affect errors/duration? Aka are there differences in learning between species? Fixed effects: INC or TIME, TRIAL, SPP; Random effects: SUBJECT
+
+
+```{r}
+
+M3.e <- lmer(INC~TRIAL*SPP + (1|SUBJECT), data = raw2)
+summary(M3.e)
+Anova(M3.e, type = 3, test.statistic = "F")
+
+M3.e <- lmer(INC~SPP*TRIAL + (1|SUBJECT), data = raw2)   #just to see if the order makes a difference
+summary(M3.e)
+Anova(M3.e, type = 3, test.statistic = "F")
+
+#order does not make a difference
+
+M3.t <- lmer(TIME~TRIAL*SPP + (1|SUBJECT), data = raw2)
+summary(M3.t)
+Anova(M3.t, type = 3, test.statistic = "F")
+
+
+```
+
+<font color= "deeporchid4"> ***RESULTS:***</font> again with the singular fit and zero variance for subject. There are no significant results for either error or duration. I suppose this indicates that there were no differences in learning between species, but with trials significant, maybe this means that learning occured within species but no difference between? T-tests showed significant differences in duration for LAT T1-T2, and T1-T3, and FORM T2-T3, but again no differences between species for single trials. Maybe this is confirming that? 
 
 
 
 
 
 
-
-
-
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   
