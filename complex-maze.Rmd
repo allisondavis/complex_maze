@@ -27,7 +27,7 @@ head(raw)
 
 ###  First look
 
-I will first look at the data via boxplots for each trial vs species, as well as bar charts per species
+I will first look at the data via box plots for each trial vs species, as well as bar charts per species
 
 ```{r, warning=FALSE, message=FALSE}
 library(ggplot2)
@@ -89,7 +89,7 @@ t.test(form$T2.I, form$T3.I, alternative = "two.sided")
 
 <font color = "deeporchid4"> No significant differences found.</font>
 
-* using F-test to detect different variations in differnt species in same trial, and different trials in same species
+* using F-test to detect different variations in different species in same trial, and different trials in same species
 
 ```{r}
 
@@ -148,7 +148,7 @@ t.test(form$T2.TIME, form$T3.TIME, alternative = "two.sided")
 
 <font color = "deeporchid4"> No significant differences found.</font>
 
-* using F-test to detect different variations in differnt species in same trial, and different trials in same species
+* using F-test to detect different variations in different species in same trial, and different trials in same species
 
 ```{r}
 
@@ -338,22 +338,107 @@ Anova(M3.t, type = 3, test.statistic = "F")
 
 ```
 
-<font color= "deeporchid4"> ***RESULTS:***</font> again with the singular fit and zero variance for subject. There are no significant results for either error or duration. I suppose this indicates that there were no differences in learning between species, but with trials significant, maybe this means that learning occured within species but no difference between? T-tests showed significant differences in duration for LAT T1-T2, and T1-T3, and FORM T2-T3, but again no differences between species for single trials. Maybe this is confirming that? 
+<font color= "deeporchid4"> ***RESULTS:***</font> again with the singular fit and zero variance for subject. There are no significant results for either error or duration. I suppose this indicates that there were no differences in learning between species, but with trials significant, maybe this means that learning occurred within species but no difference between? T-tests showed significant differences in duration for LAT T1-T2, and T1-T3, and FORM T2-T3, but again no differences between species for single trials. Maybe this is confirming that? 
+
+
+
+#### **Take 3**
+
+Using same data set as before (where each trial is separate line).
+
+```{r, warning=FALSE, message=FALSE}
+library(curl)
+
+raw2 <- curl("https://raw.githubusercontent.com/allisondavis/complex_maze/master/mixed.format_complex-raw2.csv")
+
+raw2 <- read.csv(raw2, header = TRUE, sep = ",", stringsAsFactors = TRUE)
+
+raw2
+
+names(raw2)[1] <- "SUBJECT"   #easier to type without the X.U.FEFF in front!
+
+raw2
+
+```
+
+
+***FOCUS***: the focus will be on model 3, where we see how learning across three trials differs between the species 
+`[INC or TIME~TRIAL* SPP +(1|SUBJECT)])` 
+
+
+  
+```{r, warning=FALSE, message=FALSE}
+library(lme4)
+library(lmerTest)
+library(car)
+
+M3.e <- lmer(INC~TRIAL*SPP + (1|SUBJECT), data = raw2)
+summary(M3.e)
+Anova(M3.e, type = 3, test.statistic = "F")
+
+
+M3.t <- lmer(TIME~TRIAL*SPP + (1|SUBJECT), data = raw2)
+summary(M3.t)
+Anova(M3.t, type = 3, test.statistic = "F")
+
+
+```  
+  
+
+
+  * As we saw previously, we get a singular fit, zero variance and SD with SUBJECT as our random effect. Upon discussing this with the lab, they said it could indicate two things: either the effect of subject is negligent on the model, so we should run a model without subject, OR this is a byproduct of having too many variables to explain the variation. 
+
+
+I will run a linear model without the effect of subject to see how it compares to the linear mixed model.
+
+
+```{r}
+LM3.e <- lm(INC~TRIAL*SPP, data = raw2)
+summary(LM3.e)
+Anova(LM3.e, type = 3, test.statistic = "F")
+
+
+LM3.t <- lm(TIME~TRIAL*SPP, data = raw2)
+summary(LM3.t)
+Anova(LM3.t, type = 3, test.statistic = "F")
+
+
+
+```
+  
+
+<font color= "deeporchid4"> ***RESULTS:***</font> We see very similar, if not identical p-values for the linear model. This seems to indicate that the mixed model is either not correctly taking into account the effect of subject, or subject really has no overall affect on INC or TIME. 
 
 
 
 
+Another suggestion made was to run a *generalized* mixed linear model using the poisson distribution. This was suggested due to the small sample size, and the deviance from normalcy seen in our qqplots (see second try). I will try a generalized mixed linear model on the data with a poisson fit to see how this affects our results.
+
+  * *Need to figure out how to do a qqplot with a poisson fit. Previous website I was using no longer exists!* (https://ase.tufts.edu/gsc/gradresources/guidetomixedmodelsinr/mixed%20model%20guide.html)
 
 
+
+
+```{r, warning=FALSE, message=FALSE}
+
+library(lme4)
+library(lmerTest)
+library(car)
+
+
+GLM3.e <- glmer(INC~TRIAL*SPP + (1|SUBJECT), data = raw2, family="poisson")
+summary(GLM3.e)
+
+
+GLM3.t <- glmer(TIME~TRIAL*SPP + (1|SUBJECT), data = raw2, family="poisson")
+summary(GLM3.t)
+
+
+
+```
   
   
-  
-  
-  
-  
-  
-  
-  
+<font color= "deeporchid4"> ***RESULTS:*** </font> It appears that with INC, trial is now significant but species and interaction still is not. This would suggest that this is a change occuring across trials, but that there is no difference between the species (seems about right with boxplots). As for TIME, the summary throws a continuous error since all the time is non-integer (poisson runs with integers), but even when the error ends, we get trial and interaction of trial and species as significant (suuuper sig). Not really sure what it means to have interaction but not spp by itself as significant. Also, the Anova function didn't work for this, not sure why and not sure if we need and F statistic p-value or if the p-value given is fine.
   
   
   
