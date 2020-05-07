@@ -359,6 +359,8 @@ names(raw2)[1] <- "SUBJECT"   #easier to type without the X.U.FEFF in front!
 
 raw2
 
+raw2$TRIAL <- ordered(raw2$TRIAL)
+
 ```
 
 
