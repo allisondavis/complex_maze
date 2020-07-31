@@ -383,6 +383,12 @@ M3.t <- lmer(TIME~TRIAL*SPP + (1|SUBJECT), data = raw2)
 summary(M3.t)
 Anova(M3.t, type = 3, test.statistic = "F")
 
+Fm <- raw2[raw2$SPP == "form",]
+R <- lmer(TIME~TRIAL + (1|SUBJECT), data =Fm)
+summary(R)
+
+g <- lmer(INC~TRIAL + (1|SUBJECT), data = raw2)
+summary(g)
 
 ```  
   
