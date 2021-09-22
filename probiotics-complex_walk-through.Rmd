@@ -1,0 +1,470 @@
+---
+title: "probiotics-complex_walk-through"
+author: "Allison Davis Connelly"
+date: "9/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction {.tabset .tabset-fade .tabset-pills}
+
+In this section, introduce your project. Discuss relevant background information, the questions you're address and why you think it's cool, and include your hypotheses and predictions.
+
+<font color= "deeporchid4"> ***INTRO:***</font>
+
+
+
+
+# Methods {.tabset .tabset-fade .tabset-pills}
+
+In this section, briefly describe your experimental methods --just enough to give a reader an idea of how your ran them, no need for a step-by-step. 
+
+<font color= "deeporchid4"> ***HOW TO:***</font>
+
+
+
+
+
+
+# Results {.tabset .tabset-fade .tabset-pills}
+
+In this section, we'll walk through the analyses and you'll discuss your results as we go.
+
+
+## Data collection {.tabset .tabset-fade .tabset-pills}
+
+You first need to call you data from the internet in order to run stats in Rstudio. Your data should be saved as a csv file, and uploaded to your github repository (github project). On github, click on your project, click on the csv file, then hit "raw" --you will need to copy the html of the raw file to use in Rstudio.
+
+To pull your data into Rstudio, you will need to use the following functions/packages: library(), curl package, curl(), read.csv()
+
+  * If you haven't done so already, install the curl package. You can install a package in two ways:
+      1) use `install.packages()` with the name of the package in the brackets
+      
+      2) go to your packages tab in the lower right corner (Files Plots **Packages** Help Viewer), hit install, and type in the name of the package before hitting the install button again.
+  
+  * Stuck? See the "Data collection" section in the Intro to R html.
+
+
+```{r}
+#load in the curl package
+
+
+#pull the data from the internet using your html and assign a name
+
+
+#force your data to be read as a csv
+
+
+```
+
+Now we want to make sure your data was pulled correctly, and we also want to create two separate data frames for each of the treatments. This way we can do stats on three data frames: raw data (original file we pulled from the internet), probiotics (all the info but just for probiotic group), and control (all the info but just for control group).
+
+For this step, you will need: head(), data frame selection (aka data frame[data frame$name .....])
+
+  * Stuck? See the "Data collection" section in the Intro to R html (part about creating a data frame with only certain elements)
+  
+  * Make sure you assign a new name for your new data frames! If you keep the name the same for all three data frames, R will overwrite (aka erase) your data!
+  
+```{r}
+#check the head of your raw dataframe to make sure it was read in correctly
+#NOTE: whenever you read in a csv, R automatically adds X.U.FEFF to the first column. This is normal!
+
+
+#create a dataframe for probiotic treatment by selecting data from your raw dataframe with Probiotics as treatment.
+
+
+#create a dataframe for control by selecting data from your raw dataframe with control as the treatment.
+
+
+#check the head of your new probiotic and control dataframes to make sure it selected correctly.
+
+
+
+```
+
+
+## Data analyses {.tabset .tabset-fade .tabset-pills}
+
+Now we get to the fun part -actually analyzing our data! While most people want to jump right in to the most complicated stat models, it's actually better practice to get an idea of what your data look like. Getting summary statistics (mean, median, mode etc) and visualizing your data give you an idea of how your data relate to each other. This will make the conclusions from the more complicated stats easier to understand.
+
+
+### Summary statistics {.tabset .tabset-fade .tabset-pills}
+
+So let's begin with summary statistics. For this you will need: rstatix package, get_summary_stats()
+
+  * Make sure to install the rstatix package. See the beginning of this Rmd on how to install.
+  
+  * The summary stats you want are: mean, standard deviation, median, and interquartile range.
+  
+  * For more details on how to use get_summary_stats() see: https://www.datanovia.com/en/lessons/wilcoxon-test-in-r/#summary-statistics-2
+  
+      + ex: get_summary_stats(weight, type ="median", data=mice)
+          + the %>% used on the website requires another package, but is just specifying the data frame to use; instead use data=name in function OR specify by mice$weight.
+
+
+```{r}
+#load in the rstatix package 
+
+
+#get summary statistics for all data
+
+
+#get summary statistics for the probiotic data  #NOTE: want to get an idea of how each treatment looks, so we'll separate them.
+
+
+#get summary statistics for the control data
+
+
+
+```
+
+
+While numbers are great, a picture is often easier to understand. So let's graph out our data to get a better idea of what's going on. Box plots are a good graph to use, since it will show us the mean and range of the data. 
+
+
+We'll focus on duration and error data. Our main goal is to see if the fish differ in how long it takes them to complete the maze or how many errors they make.
+
+For this you will use: boxplot()
+
+  * For more info on boxplot() see: https://www.statmethods.net/graphs/boxplot.html
+  
+  * We want our boxplots to display duration or error by trial AND treatment. When we want to display our y value (duration or errors) by two x values (trial and treatment), we denote this as y~x1*x2
+  
+  * Remember to add x and y lables! 
+
+
+```{r}
+#create a box plot showing duration by trial and treatment
+
+
+#create a box plot showing errors by trial and treatment
+
+
+
+```
+
+
+
+Now that you've done basic statistics, how does your data look? Write about the trends you see below.
+
+<font color="deeporchid4"> ***FIRST LOOK AT DATA:*** </font>
+
+
+
+
+
+
+
+### Basic statistics {.tabset .tabset-fade .tabset-pills}
+
+Ok, now we dive even deeper. Let's review the questions we want to answer with our more complicated stats:
+
+1) Are there differences between trials within each treatment? Lower duration time or error counts as the trials progress will tell us that learning occured for that treatment group.
+
+2) Is there a difference in duration/error between the treatments? Here we want to see how the learning accross the three trials for probiotics compares to that of control. 
+
+
+#### Prep the data {.tabset .tabset-fade .tabset-pills}
+
+Some of these stats use the duration data, but some of the stats we'll use don't like integers. Before starting, it might be best to make the duration data whole numbers --you can do this by converting the seconds data into milliseconds for example.
+
+To change the duration data for each individual, you need to multiply the duration by 1000. You will have to create your own function for this --a function that will multiply x by 1000. You'll then apply this function to the data frame so it can calculate all in one step! You can then add the new duration values back to our data frames to use in our stats. 
+
+For this you use: lapply(), function(x){}, and cbind().
+
+  * Stuck? See the "Complex" tab in Intro to R html.
+  
+  * Remember to rename your new values so you can add them onto your original data frame!
+
+  * Since you will use this for all analyses, perform on the raw, probiotic and control data frames. 
+
+```{r}
+#apply your 1000x function to the duration column in the raw data frame
+
+#bind this as a new column in the raw data frame
+
+
+
+#apply your 1000x function to the duration column in the probiotic data frame
+
+#bind this as a new column in the probiotic data frame
+
+
+
+#apply your 1000x function to the duration column in the control data frame
+
+#bind this as a new column in the control data frame
+
+
+
+
+```
+
+
+Awesome! All your data frames should now be ready to answer our questions. They should include all the original data plus our new duration column.
+
+#### Question 1 {.tabset .tabset-fade .tabset-pills}
+
+To address both our questions, we will first examine our data in small chunks using "simple" statistics, then take a look at the whole picture using more complex stats --aka mixed effects models.
+
+
+For our "simple" stats, we'll be using t-tests and F-tests. T-tests examine differences in the mean between two groups, so either the mean for trial 1 and 2 for probiotics, or the mean of trial 1 for probiotics and trial 1 for control. This will tell us if the average performance of one group was better than the other. F-tests examine the variation of two groups. For example, if there is a lot of variation in trial 1 but very little variation in trial 3, an F-test can tell us if this evidence of learning --more consistent in errors or time-- is statistically significant. Additionally, variation is an important question when looking at our asexual amazons: in theory, they should not have a lot of variation since they are all clones. Any variation we see in them is important and interesting!
+
+For t-tests and F-tests, you'll use the t.test() and var.test() functions respectively.
+
+  * make sure use 'alternative = "two.sided" ' for all tests! Two-sided tests indicate that the data can go in either direction --the mean or variation in trial 2 could be higher or lower than trial 1 for example.
+
+
+
+Let's begin with our question (1)
+
+1) Are there differences between trials within each treatments?
+
+You want to see how the number of errors compares between trials 1 and 2, 1 and 3, and 2 and 3 for each treatment group. You want to repeat this for the duration values. Again, this will give you some hard numbers to go with your boxplot visualizations --it may look like there's a difference between trials in your boxplot, but is this statistically significant?
+
+For this question, you will use: t.test() and var.test()
+
+  * Stuck? See the "Complex" tab in the Intro to R html.
+  
+  * Remember, you need to indicate that both tests are two-sided.
+
+
+
+```{r}
+#run a t-test on number of errors for the probiotics between trials 1 and 2
+
+#run a F-test on number of errors for the probiotics between trials 1 and 2 
+
+#repeat for trials 2 and 3, and 1 and 3
+
+
+
+#run a t-test on number of errors for the control between trials 1 and 2
+
+#run a F-test on number of errors for the control between trials 1 and 2 
+
+#repeat for trials 2 and 3, and 1 and 3
+
+
+
+#run a t-test on duration for the probiotics between trials 1 and 2
+
+#run a F-test on duration for the probiotics between trials 1 and 2 
+
+#repeat for trials 2 and 3, and 1 and 3
+
+
+
+#run a t-test on duration for the control between trials 1 and 2
+
+#run a F-test on duration for the control between trials 1 and 2 
+
+#repeat for trials 2 and 3, and 1 and 3
+
+
+
+
+```
+
+
+What did you find? Discuss your results below, and what it may indicate about learning within each treatment group. Are there differences between using time or errors as a learning indicator? If so, what may this indicate? How do the statistical results compare to your visualizations?
+
+<font color= "deeporchid4"> ***RESULTS:***</font>
+
+
+
+
+
+#### Question 2 {.tabset .tabset-fade .tabset-pills}
+
+Let's go now to question (2). 
+
+2) Is there a difference in duration/error between the treament groups?
+
+Here we want to see if there are differences between the treatment groups within each trial. For example, did probiotic fish make fewer errors or vary less than control fish in trial 1? We'll repeat similar analyses as before, but this time with the two treatments.
+
+
+For this, you will use: t.test() and var.test()
+  
+  * Remember, you need to indicate that both tests are two-sided.
+  
+
+```{r}
+#run a t-test on number of errors for trial 1 between the probiotics and control
+
+#run a F-test on number of errors for trial 1 between the probiotics and control
+
+#repeat for trials 2 and 3
+
+
+
+#run a t-test on duration for trial 1 between the probiotics and control
+
+#run a F-test on duration for trial 1 between the probiotics and control
+
+#repeat for trials 2 and 3
+
+
+
+
+```
+
+
+What did you find? Discuss your results below, and what it may indicate about how each treatment group learns. How do the statistical results compare to your visualizations?
+
+<font color= "deeporchid4"> ***RESULTS:***</font>
+
+
+
+
+### Complex stats {.tabset .tabset-fade .tabset-pills}
+
+Ok! So now we have a general idea of how each treatment group performed in each trial, and we have these small trial comparisons (1-2, 2-3, 1-3), but these small comparisons don't give us the full picture on how each treatment group learns. Additionally, it's possible that individual fish were either really good or really bad at the maze and are influencing our results. Because we want to take into account multiple effects, such as trial number, treatment, and individual ID, we have to use mixed effects models.
+
+Mixed effects models come in two flavors: linear mixed effects and generalized linear mixed effects. In essence, linear models are used on "normal" data while generalized models can take into account small samples or non-normal distributions. For more info on what it means to be normal, check out: https://www.youtube.com/watch?v=mtbJbDwqWLE
+
+Both types of models have two types of effects: fixed effects and random effects. Fixed effects are explanitory variables (x values) that have a fixed or finate number of levels. Random effects are also explanitory variables, but that have an infinite number of levels. To illustrate the difference, check out this video: https://www.youtube.com/watch?v=VhMWPkTbXoY&t=69s. In this case oat type and nitrogen concentrations are fixed effects because they are explanitory variables with either 3 or 4 levels (only 3 types of oats and only 4 concentrations of nitrogen) and blocks is a random effect because there was an infinite number of possible sites they could've picked to make a block.
+
+For our experiment, take a second to think, what are our fixed effects and random effects? Type your answer below.
+
+<font color= "deeporchid4"> ***FIXED AND RANDOM EFFECTS:***</font>
+
+
+
+One more thing we have to think about is how R is dealing with our trials. While it understands that these are categories, it doesn't realize that they're related. At the moment, R compares trial 1 and 3 and 1 and 2 equally; if there is a strong correlation between 1 and 3, but not so much 1 and 2, R may still say it's significant. This doesn't really show learning across trials. We know trials 1 and 2 and 2 and 3 are more related than 1 and 3, since they follow each other. When we *order* our data, R takes into account all three trials, and tells us if how they performed in trial 3 following trial 2 following trial 1 is significant. Another way to visualize this: without ordering our data, R tries to draw line of best fit between trials 1 and 2, then 2 and 3, then 1 and 3 (three separate lines), but when we order our data, R tries to make a best fit line between ALL trials (what we want).
+
+To order the data, you will use: ordered()
+
+  * remember to *replace* the original data with this ordered data **see if my intro talks about this**
+  
+  * Stuck? See "complex" on the intro to R html.
+  
+```{r}
+#replace the trial column with ordered trials
+  
+  
+```
+  
+Ok, let's get stuck into mixed models. For mixed models, you'll need to use the following packages: lme4, lmerTest, and car. You will need to install and load them up (using the library() function).
+
+  * See the top of this walkthrough for how to install packages.
+
+#### Question 1 {.tabset .tabset-fade .tabset-pills}
+
+First, question 1: 
+1) Are there differences among trials within each treatment? 
+
+Let's check if our data is normal or non-normal. The easiest way to do this is by using a qqplot. A qqplot plots the quantiles of one dataset against the quantiles of a null normal dataset. If the majority of the points fall within the confidence intervals (dashed lines), then we can assume the dataset is normal. NOTE: the upper and lower ends of the dataset are often skewed, but the majority should fall in the center along the solid line. Remember, if the dataset is normal, we can use linear mixed models, but if it's not normal we use generalized linear mixed models. 
+
+You will use: qqp()
+  
+  * For this function, you will need to specify the column of data you want to plot against the normal data using the dataframe$columnname format
+  
+  * You'll want to specify "norm" to make sure the plot uses a normal distribution.
+  
+```{r}
+#load the car package
+
+#produce a qqplot for the duration data for probiotics
+
+#produce a qqplot for the error data for probiotics
+
+
+
+#produce a qqplot for the duration data for the control
+
+#produce a qqplot for the error data for the control
+
+
+```
+
+
+What did you find? Will you use a linear mixed or generalized linear mixed model. Justify your conclusions below.
+
+<font color= "deeporchid4"> ***RESULTS:***</font>
+
+
+
+
+If the data is normal, you will use the lmer() function. If the data is non-normal, you will use the glmer() function. You will follow either up with the summary() function.
+
+  * both functions use the format yvalues~xvalue + (1|random effect), data =dataframe
+  
+  * the glmer will also need a family= "poisson" specification (we use poisson because it can deal with small sample sizes)
+  
+  * remember to name your mixed model so you can use it in your summary function!
+  
+  * NOTE: after ordering the data, the output of the mixed models will give you name.L and name.Q. L stands for linear and Q stands for quadradics. It's the type of model R is fitting the data to, but to be honest, I'm not 100% positive what it means if one is significant over the other... 
+
+
+```{r}
+
+#load the lme4 and lmerTest packages
+
+
+#perform a mixed model on the duration across trials for probiotics
+
+
+#perform a mixed model on the errors across trials for probiotics
+
+
+
+#perform a mixed model on the duration across trials for control
+
+
+#perform a mixed model on the errors across trials for control
+
+
+
+```
+
+
+What did you find? Did either treatment group show learning? If so, did they show it with duration, errors, or both? Describe your results below.
+
+<font color= "deeporchid4"> ***RESULTS:***</font>
+
+
+
+
+#### Question 2 {.tabset .tabset-fade .tabset-pills}
+
+Now for question 2 (sort of the more exciting question):
+
+2) Is there a difference in duration/error between the treatment groups? 
+
+For this question, you will again use either lmer() or glmer(), but you will need to add all fixed effects (or all x values). Now your format for both will look like: yvalues~xvalue*xvalue + (1|random effect), data=dataframe. 
+
+  * since we're looking at how learning across the three trials differs between the treatment groups in one model, you will  use the raw data (not the treatment separated data).
+
+
+```{r}
+#perform a mixed model on the duration across trials and treatment
+
+
+#perform a mixed model on the errors across trials and treatment
+
+
+
+```
+
+
+What did you find? When we take into account subject and treatment, was there still significant learning across trials? If so, did they show it with duration, errors, or both? Was there an interaction effect? If so, what would this mean? Describe your results below.
+
+<font color= "deeporchid4"> ***RESULTS:***</font>
+
+
+
+
+
+# Discussion and Conclusions {.tabset .tabset-fade .tabset-pills}
+
+In this section, summarise your results from all your tests. How did your results address the two questions we tested? How did your results address your hypotheses and predictions? Make sure to connect your results back to the background information --what do your results say about probiotic treatment for cognition?
+
+<font color= "deeporchid4"> ***CONCLUSIONS:***</font>
+
+
+
